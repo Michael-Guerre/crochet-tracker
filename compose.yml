@@ -1,0 +1,14 @@
+services:
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8000:8000"
