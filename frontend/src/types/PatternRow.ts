@@ -1,5 +1,5 @@
 export type PatternRow = {
-	row: number;
-	instruction: string;
-	targer:number;
+  row: number;
+  instruction: string;
+  target: number;
 }
