@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { parsePattern } from "./services/patternParser.ts";
-
+import { translateInstruction } from "./services/translateInstruction";
 
 function App() {
   const [patternText, setPatternText] = useState(() => {
@@ -119,7 +119,7 @@ function App() {
 
         {/* INSTRUCTION */}
         <div style={styles.instruction}>
-          {currentRow.instruction}
+          {translateInstruction(currentRow.instruction)}
         </div>
       </div>
 
