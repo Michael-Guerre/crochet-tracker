@@ -20,7 +20,7 @@ function App() {
     return saved ? Number(saved) : 0;
   });
   const pattern = parsePattern(patternText);
-
+  const [locked, setLocked] = useState(false);
   useEffect(() => {
     localStorage.setItem(
       "pattern",
@@ -133,6 +133,25 @@ function App() {
           +1
         </button>
       </div>
+      <button onClick={() => setLocked(l => !l)}>
+        {locked ? "Unlock pattern" : "Lock pattern"}
+      </button><br />
+      <textarea
+        rows={10}
+        cols={40}
+        value={patternText}
+        disabled={locked}
+        onChange={(e) => {
+          setPatternText(e.target.value);
+          setRowIndex(0);
+          setStitches(0);
+        }}
+      /><br />
+      <button
+        disabled={locked}
+        onClick={() => { localStorage.clear(); setPatternText("R1: 6 sc (6)\nR2: inc x6 (12)"); setRowIndex(0); setStitches(0); }}>
+        Reset
+      </button>
     </div>
 
   );
