@@ -3,6 +3,9 @@ import { parsePattern } from "./services/patternParser.ts";
 import { translateInstruction } from "./services/translateInstruction";
 
 function App() {
+  function isRepeatPattern(instruction: string) {
+    return /\[.+\]\s*x\d+/i.test(instruction);
+  }
   const [patternText, setPatternText] = useState(() => {
     return (
       localStorage.getItem("pattern") ??
@@ -45,6 +48,9 @@ function App() {
 
   const target = pattern[rowIndex]?.target ?? 0;
   const currentRow = pattern[rowIndex] ?? pattern[0];
+  const expandedInstruction = currentRow.instruction;
+  const [actionIndex, setActionIndex] = useState(0);
+  const [subStep, setSubStep] = useState(1);
   const addStitch = () => {
     const next = stitches + 1;
 
