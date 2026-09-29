@@ -5,7 +5,7 @@ export function translateInstruction(text: string): string {
 
   for (const [key, value] of Object.entries(crochetDictionary)) {
     const regex = new RegExp(`\\b${key}\\b`, "gi");
-    result = result.replace(regex, value);
+    result = result.replace(regex, value.translation);
   }
 
   return result;

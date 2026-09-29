@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { parsePattern } from "./services/patternParser.ts";
 import { translateInstruction } from "./services/translateInstruction";
+import { unpackInstruction } from "./services/instructionEngine.ts";
 
 function App() {
-  function isRepeatPattern(instruction: string) {
-    return /\[.+\]\s*x\d+/i.test(instruction);
-  }
   const [patternText, setPatternText] = useState(() => {
     return (
       localStorage.getItem("pattern") ??
@@ -22,8 +20,11 @@ function App() {
     const saved = localStorage.getItem("rowIndex");
     return saved ? Number(saved) : 0;
   });
-  const pattern = parsePattern(patternText);
+
   const [locked, setLocked] = useState(false);
+
+  const pattern = parsePattern(patternText);
+
   useEffect(() => {
     localStorage.setItem(
       "pattern",
@@ -48,9 +49,7 @@ function App() {
 
   const target = pattern[rowIndex]?.target ?? 0;
   const currentRow = pattern[rowIndex] ?? pattern[0];
-  const expandedInstruction = currentRow.instruction;
-  const [actionIndex, setActionIndex] = useState(0);
-  const [subStep, setSubStep] = useState(1);
+
   const addStitch = () => {
     const next = stitches + 1;
 
@@ -63,15 +62,15 @@ function App() {
       setStitches(0);
       return
     }
-
     setStitches(next);
   }
 
   const progress = target ? (stitches / target) * 100 : 0;
+
   const delStitch = () => {
     if (rowIndex === 0 && stitches === 0) return;
     if (stitches > 0) {
-      setStitches(s => s - 1);
+      setStitches((s) => s - 1);
       return;
     }
 
@@ -82,7 +81,12 @@ function App() {
     }
 
   }
-
+  const resetPattern = () => {
+    localStorage.clear();
+    setPatternText("R1: 6 sc (6)\nR2: inc x6 (12)\nR3: [sc, inc] x6 (18)");
+    setRowIndex(0);
+    setStitches(0);
+  };
   if (pattern.length === 0) {
     return (
       <div>
@@ -104,16 +108,16 @@ function App() {
       <h1 style={styles.title}>Crochet Tracker</h1>
 
       <div style={styles.card}>
-        {/* ROW INFO */}
         <div style={styles.rowInfo}>
           Row {currentRow.row} / {pattern.length}
         </div>
 
-        {/* PROGRESS */}
         <div style={styles.progressText}>
           {stitches} / {target}
         </div>
+        <div>
 
+        </div>
         <div style={styles.bar}>
           <div
             style={{
@@ -123,13 +127,12 @@ function App() {
           />
         </div>
 
-        {/* INSTRUCTION */}
         <div style={styles.instruction}>
           {translateInstruction(currentRow.instruction)}
+          <p>{translateInstruction(unpackInstruction(currentRow.instruction)[stitches])}</p>
         </div>
       </div>
 
-      {/* BUTTONS */}
       <div style={styles.controls}>
         <button style={styles.btnMinus} onClick={delStitch}>
           -1
@@ -155,7 +158,7 @@ function App() {
       /><br />
       <button
         disabled={locked}
-        onClick={() => { localStorage.clear(); setPatternText("R1: 6 sc (6)\nR2: inc x6 (12)"); setRowIndex(0); setStitches(0); }}>
+        onClick={resetPattern}>
         Reset
       </button>
     </div>

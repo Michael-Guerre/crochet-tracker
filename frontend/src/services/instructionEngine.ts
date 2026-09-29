@@ -1,60 +1,81 @@
+import { crochetDictionary } from "./crochetDictionary";
 import type { ExpandedInstruction } from "../types/ExpandedInstruction";
 
-export function expandInstruction(
-  instruction: string
-): ExpandedInstruction {
+function expandAction(action: string): string[] {
+  const normalized = action.trim();
 
-  // Cas : [sc, inc] x6
-  const repeatMatch = instruction.match(
-    /^\[(.+)\]\s*x(\d+)$/i
-  );
+  if (!normalized) {
+    return [];
+  }
 
-  if (repeatMatch) {
-    const sequence = repeatMatch[1]
+  const dictionaryEntry = crochetDictionary[normalized.toLowerCase()];
+
+  if (!dictionaryEntry || dictionaryEntry.producedStitches <= 1) {
+    return [normalized];
+  }
+
+  return Array.from({ length: dictionaryEntry.producedStitches }, (_, index) => {
+    const step = index + 1;
+    return `${normalized} ${step}/${dictionaryEntry.producedStitches}`;
+  });
+}
+
+export function unpackInstruction(instruction: string): string[] {
+  const normalized = instruction.trim();
+
+  if (!normalized) {
+    return [];
+  }
+
+  const bracketRepeat = normalized.match(/^\[(.+)\]\s*x\s*(\d+)$/i);
+  if (bracketRepeat) {
+    const sequence = bracketRepeat[1]
       .split(",")
-      .map(step => step.trim());
+      .map((step) => step.trim())
+      .filter(Boolean);
 
-    const repetitions = Number(repeatMatch[2]);
-
+    const repetitions = Number(bracketRepeat[2]);
     const steps: string[] = [];
 
     for (let i = 0; i < repetitions; i++) {
-      steps.push(...sequence);
+      for (const step of sequence) {
+        steps.push(...expandAction(step));
+      }
     }
 
-    return { steps };
+    return steps;
   }
 
-  // Cas simple : "inc x6"
-  const simpleRepeat = instruction.match(
-    /^(.+)\s*x(\d+)$/i
-  );
-
+  const simpleRepeat = normalized.match(/^(.+?)\s*x\s*(\d+)$/i);
   if (simpleRepeat) {
     const action = simpleRepeat[1].trim();
     const repetitions = Number(simpleRepeat[2]);
 
-    return {
-      steps: Array(repetitions).fill(action)
-    };
+    if (!action) return [];
+
+    return Array.from({ length: repetitions }, () => expandAction(action)).flat();
   }
 
-  // Cas : "6 sc"
-  const countAction = instruction.match(
-    /^(\d+)\s+(.+)$/i
-  );
-
+  const countAction = normalized.match(/^(\d+)\s+(.+)$/i);
   if (countAction) {
     const repetitions = Number(countAction[1]);
     const action = countAction[2].trim();
 
-    return {
-      steps: Array(repetitions).fill(action)
-    };
+    if (!action) return [];
+
+    return Array.from({ length: repetitions }, () => expandAction(action)).flat();
   }
 
-  // Fallback
+  return expandAction(normalized);
+}
+
+export function expandInstruction(
+  instruction: string,
+  currentStepIndex: number = 0
+): ExpandedInstruction {
   return {
-    steps: [instruction]
+    steps: unpackInstruction(instruction),
+    currentStepIndex,
   };
 }
+
